@@ -1,0 +1,13 @@
+.idea/
+venv/
+.ruff_cache/
+
+
+.env
+.coverage
+
+logs/
+.format.log
+
+certs
+*.pem
