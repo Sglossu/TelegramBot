@@ -192,9 +192,7 @@ function restartFilling(sheet, chatId) {
     );
     rangeToClear.clearContent();
 
-    // Обновляем время
     sheet.getRange(userRowIndex, 2).setValue(new Date());
-
     // Запрашиваем ФИО
     const headers = allData[0];
     sendText(chatId, `Введите ${headers[4]}`);
