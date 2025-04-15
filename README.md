@@ -7,7 +7,7 @@ A convenient solution for residential buildings to collect and manage hot water 
 ## 📸 Bot in Action
 
 <div align="center">
-  <img src="https://i.imgur.com/EXAMPLE.jpg" alt="Telegram Bot Demo" width="400">
+  <img src="./assets/images/bot-screenshot-1.jpg" alt="Пример работы бота" width="250">
 
 *Example of interaction with a bot*
 </div>
