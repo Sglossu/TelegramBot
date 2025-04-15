@@ -4,6 +4,14 @@
 
 A convenient solution for residential buildings to collect and manage hot water meter readings via Telegram, with automatic Google Sheets integration.
 
+## 📸 Bot in Action
+
+<div align="center">
+  <img src="https://i.imgur.com/EXAMPLE.jpg" alt="Telegram Bot Demo" width="400">
+
+*Example of interaction with a bot*
+</div>
+
 ## ✨ Features
 
 ### 📋 Core Functionality
