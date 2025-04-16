@@ -1,14 +1,14 @@
 // Главная функция обработки сообщений
 function fillTable(contents) {
     const userData = extractUserData(contents);
-    const sheet = getSheetById(QuestionsSheetId);
+    const sheet = getSheetById(QUESTIONS_SHEET_ID);
     const allData = sheet.getDataRange().getDisplayValues();
 
     // Проверяем команду "начать сначала" и "продолжить" в самом начале
-    if (userData.message === RestartCommand) {
+    if (userData.message === RESTART_COMMAND) {
         return handleRestartCommand(sheet, userData.chat_id);
     }
-    if (userData.message === ContinnueCommand) {
+    if (userData.message === CONTINUE_COMMAND) {
         return handleContinueCommand(sheet, userData.chat_id);
     }
 
@@ -17,13 +17,13 @@ function fillTable(contents) {
     if (!userRecord) return false;
 
     // 2. Проверяем время последнего ответа (только если это не команда "продолжить")
-    if (![ContinnueCommand, RestartCommand].includes(userData.message)) {
+    if (![CONTINUE_COMMAND, RESTART_COMMAND].includes(userData.message)) {
         const timeCheck = checkLastResponseTime(sheet, userRecord, userData);
         if (timeCheck !== true) return timeCheck;
     }
 
     // 3. Если это команда "продолжить" - просто дублируем последний вопрос
-    if (userData.message === ContinnueCommand) {
+    if (userData.message === CONTINUE_COMMAND) {
         return continueLastQuestion(sheet, userRecord, userData.chat_id);
     }
 
@@ -41,14 +41,14 @@ function checkLastResponseTime(sheet, userRecord, userData) {
     const lastResponseTime = sheet.getRange(userRecord.rowIndex, 2).getValue();
     const currentTime = new Date();
 
-    if (currentTime - lastResponseTime > InactivityTimeout) {
+    if (currentTime - lastResponseTime > INACTIVITY_TIMEOUT) {
         // Обновляем время
         sheet.getRange(userRecord.rowIndex, 2).setValue(currentTime);
 
         // Предлагаем варианты только если это не команда "начать сначала"
-        if (userData.message !== RestartCommand) {
+        if (userData.message !== RESTART_COMMAND) {
             sendText(userData.chat_id,
-                TimeoutText,
+                TIMEOUT_TEXT,
                 RESTART_CONTINUE_KEYBOARD
             );
             return false;
@@ -154,48 +154,12 @@ function continueLastQuestion(sheet, userRecord, chatId) {
     const questionColumn = columnToFill > 4 ? columnToFill - 1 : 4;
 
     // Дублируем вопрос
-    if (questionColumn < LastColumnIndex) {
+    if (questionColumn < LAST_COLOUMN_INDEX) {
         sendText(chatId, `Введите ${headers[questionColumn + 1]}`);
     } else {
-        sendText(chatId, SuccessWrite);
+        sendText(chatId, SUCCESS_WRITE);
     }
 
-    return false;
-}
-
-// Начать заполнение заново
-function restartFilling(sheet, chatId) {
-    // Находим запись пользователя
-    const allData = sheet.getDataRange().getDisplayValues();
-    let userRowIndex = null;
-
-    for (let i = 1; i < allData.length; i++) {
-        if (allData[i][0] == chatId) {
-            userRowIndex = i + 1;
-            break;
-        }
-    }
-
-    // Если пользователь не найден - создаем новую запись
-    if (!userRowIndex) {
-        const username = "unknown"; // Можно получить из базы данных
-        sheet.appendRow([chatId, new Date(), username, ""]);
-        userRowIndex = sheet.getLastRow();
-    }
-
-    // Очищаем все колонки, кроме первых 4 (A-D)
-    const rangeToClear = sheet.getRange(
-        userRowIndex,
-        5, // Колонка E (ФИО)
-        1,
-        sheet.getLastColumn() - 4 // Все остальные колонки
-    );
-    rangeToClear.clearContent();
-
-    sheet.getRange(userRowIndex, 2).setValue(new Date());
-    // Запрашиваем ФИО
-    const headers = allData[0];
-    sendText(chatId, `Введите ${headers[4]}`);
     return false;
 }
 
@@ -254,12 +218,12 @@ function handleInitialConsent(sheet, userRecord, userData, allData) {
     if (userRecord.consentGiven) return true;
 
     // Обрабатываем ответ пользователя на согласие
-    if (userData.message === Agree || userData.message === DontArgee) {
+    if (userData.message === AGREE_COMMAND || userData.message === DONT_AGREE_COMMAND) {
         const consentValue = userData.message === "согласен";
         sheet.getRange(userRecord.rowIndex, 4).setValue(consentValue);
 
         if (!consentValue) {
-            sendText(userData.chat_id, RefusalOfConsent, AGREE_KEYBOARD);
+            sendText(userData.chat_id, REFUSAL_OF_CONSENT, AGREE_KEYBOARD);
             return false;
         }
         // После согласия запрашиваем ФИО и прерываем выполнение
@@ -275,7 +239,7 @@ function handleInitialConsent(sheet, userRecord, userData, allData) {
 
 // Отправка запроса на согласие
 function sendConsentRequest(chat_id) {
-    sendText(chat_id, ReedConsent, AGREE_KEYBOARD);
+    sendText(chat_id, REED_CONSENT_TEXT, AGREE_KEYBOARD);
 }
 
 // Заполнение данных пользователя
@@ -293,8 +257,8 @@ function fillUserData(sheet, userRecord, userData, allData) {
     if (columnToFill === 3) columnToFill = 4;
 
     // Если все данные заполнены
-    if (columnToFill > LastColumnIndex) {
-        sendText(userData.chat_id, SuccessWrite);
+    if (columnToFill > LAST_COLOUMN_INDEX) {
+        sendText(userData.chat_id, SUCCESS_WRITE);
         return true;
     }
 
@@ -307,10 +271,10 @@ function fillUserData(sheet, userRecord, userData, allData) {
     sheet.getRange(userRecord.rowIndex, columnToFill + 1).setValue(userData.message);
 
     // Отправляем следующий вопрос или подтверждение
-    if (columnToFill < LastColumnIndex) {
+    if (columnToFill < LAST_COLOUMN_INDEX) {
         sendText(userData.chat_id, `Введите ${headers[columnToFill + 1]}`);
     } else {
-        sendText(userData.chat_id, SuccessWrite);
+        sendText(userData.chat_id, SUCCESS_WRITE);
     }
 
     return true;

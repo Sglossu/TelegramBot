@@ -1,5 +1,5 @@
 function getSheetById(id) {
-    return SpreadsheetApp.openById(SsId).getSheets().filter(
+    return SpreadsheetApp.openById(SHEET_ID).getSheets().filter(
         function(s) {return s.getSheetId() === id }
     )[0]
 }
@@ -22,8 +22,8 @@ function sendText(chat_id, text, keyBoard) {
 
 
 function answerCommand(command, username, contents) {
-    let sheetCommand = getSheetById(CommandsSheetId).getDataRange().getDisplayValues();
-    let row = sheetCommand.find(row => row.some(cell => cell === command));
+    let sheetCommand = getSheetById(COMMANDS_SHEET_ID).getDataRange().getDisplayValues();
+    let row = SHEET_COMMAND.find(row => row.some(cell => cell === command));
     let chat_id = contents.message.chat.id;
 
     if (row == undefined) {

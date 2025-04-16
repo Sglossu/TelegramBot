@@ -97,11 +97,11 @@ function validateHotWatterDate() {
     const today = new Date();
     const currentDay = today.getDate();
 
-    if (currentDay >= firstDay && currentDay <= lastDay) {
+    if (currentDay >= FIRST_DAY && currentDay <= LAST_DAY) {
         return true;
     }
     else {
-        return `Подача показаний доступна только с ${firstDay} по ${lastDay} число каждого месяца`;
+        return `Подача показаний доступна только с ${FIRST_DAY} по ${LAST_DAY} число каждого месяца`;
     }
 }
 

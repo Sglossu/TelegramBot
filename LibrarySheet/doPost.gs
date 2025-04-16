@@ -22,7 +22,7 @@ function doPost(e) {
         }
     }
     catch (err) {
-        Logger = BetterLog.useSpreadsheet(SsId);
+        Logger = BetterLog.useSpreadsheet(SHEET_ID);
         err = (typeof err === 'string') ? new error(err) : err;
         Logger.log('%s: %s (line %s, file "%s"). Stack: "%s" . While processing %s.', err.name || '',
             err.message || '', err.lineNumber || '', err.fullName || '', '');
