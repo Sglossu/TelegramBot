@@ -4,8 +4,8 @@ function doPost(e) {
     let username = contents.message.chat.first_name;
     let chat_id = contents.message.chat.id;
 
-    if (text !== '/start') {
-        let resultValidate = validateHotWatterDate();
+    if (text === '/hot_watter' || text === 'Подать показания ГВС') {
+        let resultValidate = Validate.validateHotWatterDate();
         if (resultValidate !== true) {
             sendText(chat_id, resultValidate);
             return;
@@ -14,11 +14,11 @@ function doPost(e) {
 
 
     try {
-        if ((/^\//.exec(text))) {
+        if (Config.COMMANDS.includes(text)) {
             answerCommand(text, username, contents);
         }
         else {
-            fillTable(contents)
+            parceAnswer(contents)
         }
     }
     catch (err) {
@@ -28,6 +28,7 @@ function doPost(e) {
             err.message || '', err.lineNumber || '', err.fullName || '', '');
     }
 }
+
 
 
 

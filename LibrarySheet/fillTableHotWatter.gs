@@ -1,4 +1,4 @@
-// Главная функция обработки сообщений
+// Главная функция обработки показаний ГВС
 function fillTable(contents) {
     const userData = extractUserData(contents);
     const sheet = getSheetById(QUESTIONS_SHEET_ID);
@@ -12,42 +12,42 @@ function fillTable(contents) {
         return handleContinueCommand(sheet, userData.chat_id);
     }
 
-    // 1. Находим или создаем запись пользователя
-    const userRecord = findOrCreateUserRecord(sheet, allData, userData);
-    if (!userRecord) return false;
+    // Находим или создаём запись пользователя в бд
+    let user = UserService.createIfNotExists(userData.chat_id, userData);
 
     // 2. Проверяем время последнего ответа (только если это не команда "продолжить")
     if (![CONTINUE_COMMAND, RESTART_COMMAND].includes(userData.message)) {
-        const timeCheck = checkLastResponseTime(sheet, userRecord, userData);
+        // const timeCheck = checkLastResponseTime(sheet, userRecordInSheet, userData);
+        const timeCheck = checkLastResponseTime(user);
         if (timeCheck !== true) return timeCheck;
     }
 
     // 3. Если это команда "продолжить" - просто дублируем последний вопрос
     if (userData.message === CONTINUE_COMMAND) {
-        return continueLastQuestion(sheet, userRecord, userData.chat_id);
+        // return continueLastQuestion(sheet, userRecordInSheet, userData.chat_id);
+        return continueLastQuestion(sheet, user);
     }
 
     // 4. Проверяем согласие
-    const consentResult = handleInitialConsent(sheet, userRecord, userData, allData);
-    if (consentResult === "consent_processed") return false;
+    const consentResult = handleInitialConsent(sheet, userRecordInSheet, userData, allData);
+    if (consentResult === "consent_processed") return userRecordInSheet;
     if (consentResult === false) return false;
 
     // 5. Заполняем данные пользователя
-    return fillUserData(sheet, userRecord, userData, allData);
+    return fillUserData(sheet, userRecordInSheet, userData, allData);
 }
 
-// Проверка времени последнего ответа (упрощенная версия)
-function checkLastResponseTime(sheet, userRecord, userData) {
-    const lastResponseTime = sheet.getRange(userRecord.rowIndex, 2).getValue();
+
+function checkLastResponseTime(user) {
+    const lastResponseTime = new Date(user.updated);
     const currentTime = new Date();
 
     if (currentTime - lastResponseTime > INACTIVITY_TIMEOUT) {
         // Обновляем время
-        sheet.getRange(userRecord.rowIndex, 2).setValue(currentTime);
-
+        UserService.update(user.chat_id, {"updated": currentTime});
         // Предлагаем варианты только если это не команда "начать сначала"
         if (userData.message !== RESTART_COMMAND) {
-            sendText(userData.chat_id,
+            sendText(user.chat_id,
                 TIMEOUT_TEXT,
                 RESTART_CONTINUE_KEYBOARD
             );
@@ -89,6 +89,7 @@ function handleContinueCommand(sheet, chatId) {
     return continueLastQuestion(sheet, {rowIndex: userRowIndex}, chatId);
 }
 
+
 // Обработка команды "начать сначала" с проверкой согласия
 function handleRestartCommand(sheet, chatId) {
     const allData = sheet.getDataRange().getDisplayValues();
@@ -107,7 +108,7 @@ function handleRestartCommand(sheet, chatId) {
     // Если пользователь не найден - создаем новую запись
     if (!userRowIndex) {
         const username = "unknown";
-        sheet.appendRow([chatId, new Date(), username, ""]);
+        sheet.appendRow([chatId, formattedDateTime, username, ""]);
         userRowIndex = sheet.getLastRow();
         hasConsent = false;
     }
@@ -136,8 +137,8 @@ function handleRestartCommand(sheet, chatId) {
     return false;
 }
 
-// Продолжить заполнение (дублируем последний незаполненный вопрос)
-function continueLastQuestion(sheet, userRecord, chatId) {
+
+function continueLastQuestion(sheet, user) {
     const allData = sheet.getDataRange().getDisplayValues();
     const userRow = allData[userRecord.rowIndex - 1];
     const headers = allData[0];
@@ -163,6 +164,7 @@ function continueLastQuestion(sheet, userRecord, chatId) {
     return false;
 }
 
+
 // Извлекаем данные пользователя из сообщения
 function extractUserData(contents) {
     return {
@@ -172,6 +174,7 @@ function extractUserData(contents) {
         first_name: contents.message.chat.first_name
     };
 }
+
 
 // Находим или создаем запись пользователя
 function findOrCreateUserRecord(sheet, allData, userData) {
@@ -199,6 +202,7 @@ function findOrCreateUserRecord(sheet, allData, userData) {
         consentGiven: false
     };
 }
+
 
 // Обработка согласия (только перед первым вопросом)
 function handleInitialConsent(sheet, userRecord, userData, allData) {
@@ -242,6 +246,7 @@ function sendConsentRequest(chat_id) {
     sendText(chat_id, REED_CONSENT_TEXT, AGREE_KEYBOARD);
 }
 
+
 // Заполнение данных пользователя
 function fillUserData(sheet, userRecord, userData, allData) {
     const headers = allData[0];
@@ -279,4 +284,3 @@ function fillUserData(sheet, userRecord, userData, allData) {
 
     return true;
 }
-
